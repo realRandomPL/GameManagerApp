@@ -21,8 +21,15 @@ def main():
             break
         # Đăng nhập thành công, tạo root mới cho giao diện chính
         root2 = tk.Tk()
-        root2.title("Bộ sưu tập game")
+        root2.title("Ứng dụng quản lý game cá nhân")  # Đổi tên cửa sổ
         center_window(root2, 900, 600)  # căn giữa cửa sổ chính
+        root2.configure(bg="#23272f")
+        root2.minsize(900, 600)
+        root2.update_idletasks()
+        root2.resizable(True, True)
+        # Tự động phóng to nếu màn hình lớn
+        if root2.winfo_screenwidth() > 1200:
+            root2.state('zoomed')
         app = GameApp(user, root2, on_logout=main)
         app.run()
         break

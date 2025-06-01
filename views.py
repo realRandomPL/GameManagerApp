@@ -1,5 +1,5 @@
 import urllib.request
-from tkinter import BOTH
+from tkinter import BOTH, PanedWindow
 from tkinter.ttk import Combobox, Style, Button as TtkButton, Entry as TtkEntry, Frame as TtkFrame, Checkbutton as TtkCheckbutton, Label as TtkLabel
 from tkinter.simpledialog import Dialog
 from PIL import Image
@@ -18,6 +18,100 @@ def safe_text(val):
     if isinstance(val, str) and val.strip():
         return val.strip()
     return 'Không rõ'
+
+# --- Đảm bảo GameForm được định nghĩa trước khi sử dụng ---
+from tkinter.simpledialog import Dialog
+
+class GameForm(Dialog):
+    def __init__(self, parent, game=None):
+        self.game = game
+        super().__init__(parent, title='Form Game')
+
+    def body(self, master):
+        self.configure(bg="#23272f")
+        master.configure(bg="#23272f")
+        style = Style(master)
+        style.theme_use('clam')
+        style.configure("Card.TFrame", background="#23272f")
+        style.configure("Card.TLabel", background="#23272f", foreground="#e0e6f0", font=("Segoe UI", 12, "bold"))
+        style.configure("Accent.TButton", background="#2e8fff", foreground="#fff", font=("Segoe UI", 11, "bold"), borderwidth=0)
+        style.map("Accent.TButton", background=[('active', '#1e6fdc')])
+
+        fields = [
+            'Tên', 'Mô tả', 'Ngày phát hành', 'Nhà phát triển',
+            'Thể loại', 'Hệ máy', 'Liên kết chi tiết'
+        ]
+        self.entries = []
+
+        frm = TtkFrame(master, style="Card.TFrame")
+        frm.pack(padx=0, pady=0, fill='both', expand=True)
+
+        for i, label in enumerate(fields):
+            TtkLabel(frm, text=f'{label}:', style="Card.TLabel").pack(anchor='w', padx=24, pady=(8 if i == 0 else 2, 2))
+            entry = tk.Entry(
+                frm,
+                font=("Segoe UI", 11),
+                width=40,
+                bg="#23262e",
+                fg="#f5f6fa",
+                insertbackground="#4f8cff",
+                relief="flat",
+                highlightthickness=1,
+                highlightbackground="#31343c",
+                highlightcolor="#4f8cff",
+                borderwidth=0,
+                disabledbackground="#23262e",
+                disabledforeground="#b0b6c2"
+            )
+            entry.pack(fill='x', padx=24, pady=2, ipady=6)
+            self.entries.append(entry)
+
+        if self.game:
+            values = [
+                self.game.title or '',
+                self.game.description or '',
+                self.game.released or '',
+                self.game.developers or '',
+                self.game.genres or '',
+                self.game.platforms or '',
+                self.game.site_url or ''
+            ]
+            for entry, value in zip(self.entries, values):
+                entry.insert(0, value)
+
+        self.entries[0].focus_set()
+        for i in range(len(self.entries) - 1):
+            self.entries[i].bind('<Return>', lambda e, idx=i: self.entries[idx+1].focus_set())
+        self.entries[-1].bind('<Return>', lambda e: self.ok())
+        return self.entries[0]
+
+    def buttonbox(self):
+        box = tk.Frame(self, bg="#23272f")
+        style = Style(self)
+        style.theme_use('clam')
+        style.configure("Accent.TButton", background="#2e8fff", foreground="#fff", font=("Segoe UI", 11, "bold"), borderwidth=0)
+        style.map("Accent.TButton", background=[('active', '#1e6fdc')])
+        btn_width = 14
+        ok_btn = TtkButton(box, text="✔ OK", style="Accent.TButton", width=btn_width, command=self.ok)
+        cancel_btn = TtkButton(box, text="✖ Hủy", style="Accent.TButton", width=btn_width, command=self.cancel)
+        ok_btn.pack(side=tk.LEFT, padx=(0, 8), pady=10, expand=True, fill='x')
+        cancel_btn.pack(side=tk.LEFT, padx=(8, 0), pady=10, expand=True, fill='x')
+        self.bind("<Return>", lambda e: self.ok())
+        self.bind("<Escape>", lambda e: self.cancel())
+        box.pack(pady=(10, 0), fill='x')
+
+    def apply(self):
+        self.result = {
+            'title': self.entries[0].get(),
+            'description': self.entries[1].get(),
+            'released': self.entries[2].get(),
+            'developers': self.entries[3].get(),
+            'genres': self.entries[4].get(),
+            'platforms': self.entries[5].get(),
+            'site_url': self.entries[6].get()
+        }
+
+# ĐẢM BẢO: Sau class GameForm phải có code thân class (không để trống).
 
 class MainView:
     def _setup_style(self):
@@ -64,7 +158,10 @@ class MainView:
                         fieldbackground="#23262e", background="#23262e",
                         foreground="#f5f6fa", bordercolor="#4f8cff", lightcolor="#31343c", darkcolor="#31343c")
         # Listbox (set ở nơi tạo)
-        # ...existing code...
+        # Đảm bảo đồng bộ màu nền, border, font với dialog chọn chế độ
+        style.configure("MainBG.TFrame", background="#23272f")
+        style.configure("MainTitle.TLabel", background="#23272f", foreground="#e0e6f0", font=("Segoe UI", 16, "bold"))
+        style.configure("Section.TLabel", background="#23272f", foreground="#4f8cff", font=("Segoe UI", 13, "bold"))
 
     def __init__(self, master, manager, user, api_client=None, is_admin=False, on_logout=None):
         self.master = master
@@ -77,33 +174,32 @@ class MainView:
         self._setup_style()
         self.genre_filter = ""
         self.dev_filter = ""
-        self._original_order = None  # Lưu thứ tự gốc ban đầu (list các id)
-        self._original_id_map = {}   # Lưu mapping id -> số thứ tự gốc
+        self._original_order = None
+        self._original_id_map = {}
 
-        self.master.configure(bg="#181a20")
+        # --- Giao diện đồng bộ với dialog chọn chế độ ---
+        self.master.configure(bg="#23272f")
+        self.master.minsize(900, 600)
+        self.master.update_idletasks()
+        self.master.resizable(True, True)
+        self.master.bind("<Configure>", self._on_resize_main)
 
-        # --- Thêm canvas cuộn cho toàn bộ giao diện ---
-        self.canvas = tk.Canvas(master, bg="#181a20", highlightthickness=0)
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.scrollbar = Scrollbar(master, orient=tk.VERTICAL, command=self.canvas.yview)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        # --- Main frame ---
+        self.main_frame = TtkFrame(master, style="MainBG.TFrame")
+        self.main_frame.pack(fill='both', expand=True)
 
-        # --- Sửa: Sử dụng pack(fill='both', expand=True) cho content_frame để tự động giãn ---
-        self.content_frame = TtkFrame(self.canvas, style="Card.TFrame")
-        self.content_window = self.canvas.create_window((0, 0), window=self.content_frame, anchor="nw")
+        # --- Tiêu đề chính ---
+        TtkLabel(self.main_frame, text="BỘ SƯU TẬP GAME", style="MainTitle.TLabel", anchor="center").pack(pady=(18, 8))
 
-        self.content_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-        self.canvas.bind('<Configure>', self._on_canvas_configure)
+        # --- Thoát/Đăng xuất ---
+        top_btn_frame = TtkFrame(self.main_frame, style="MainBG.TFrame")
+        top_btn_frame.pack(fill='x', padx=24)
+        if self.on_logout:
+            self._modern_button(top_btn_frame, 'Đăng xuất', self.on_logout).pack(side=tk.RIGHT, padx=5)
 
-        # --- Luôn bind mousewheel cho canvas khi không hover listbox/info_text ---
-        self._canvas_mousewheel_enabled = True
-        self.canvas.bind("<Enter>", lambda e: self._enable_canvas_mousewheel())
-        self.canvas.bind("<Leave>", lambda e: self._disable_canvas_mousewheel())
-
-        # --- Các thành phần giao diện đặt vào content_frame ---
-        filter_frame = TtkFrame(self.content_frame, style="Card.TFrame")
-        filter_frame.pack(padx=20, pady=15, fill='x')
+        # --- Thanh filter/sort ---
+        filter_frame = TtkFrame(self.main_frame, style="MainBG.TFrame")
+        filter_frame.pack(padx=24, pady=8, fill='x')
 
         TtkLabel(filter_frame, text="Thể loại:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
         self.genre_var = tk.StringVar()
@@ -119,68 +215,111 @@ class MainView:
         self.sort_combobox.pack(side=tk.LEFT, padx=5)
         self.sort_combobox.bind("<<ComboboxSelected>>", self.on_sort_change)
 
-        # --- Sửa lại: chỉ tích mặc định từ A-Z, logic cũ cho các trường khác ---
         self.sort_order = tk.BooleanVar(value=True)
         TtkCheckbutton(filter_frame, text="Tăng dần A->Z", variable=self.sort_order, style="Modern.TCheckbutton").pack(side=tk.LEFT, padx=10)
         self.sort_order.trace('w', self.on_sort_change)
 
-        # Đăng xuất
-        if self.on_logout:
-            self._modern_button(filter_frame, 'Đăng xuất', self.on_logout).pack(side=tk.RIGHT, padx=5)
+        # --- Nội dung chính: chia 2 cột bằng PanedWindow ---
+        paned = PanedWindow(self.main_frame, orient=tk.HORIZONTAL, sashrelief='flat', bg="#23272f", bd=0, sashwidth=6)
+        paned.pack(fill='both', expand=True, padx=24, pady=(0, 12))
 
-        list_frame = TtkFrame(self.content_frame, style="Card.TFrame")
-        list_frame.pack(padx=20, pady=10, fill='both', expand=True)  # expand=True
+        left_frame = TtkFrame(paned, style="MainBG.TFrame")
+        right_frame = TtkFrame(paned, style="MainBG.TFrame")
+        paned.add(left_frame, minsize=220)
+        paned.add(right_frame, minsize=320)
 
-        scrollbar = Scrollbar(list_frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self._paned = paned
+        self._left_frame = left_frame
+        self._right_frame = right_frame
 
-        self.listbox = tk.Listbox(list_frame, width=50, yscrollcommand=scrollbar.set,
-                                  font=("Segoe UI", 12), bg="#23262e", fg="#f5f6fa",
+        self._default_pane_ratio = 0.5
+        self._pane_initialized = False
+        self.master.after(100, self._set_default_pane_size)
+        paned.bind('<Configure>', self._on_pane_configure)
+
+        # --- Cột trái: danh sách game ---
+        # left_frame = TtkFrame(content_frame, style="MainBG.TFrame")
+        # left_frame.pack(side=tk.LEFT, fill='both', expand=True, padx=(0, 12))
+
+        # Tiêu đề danh sách game
+        TtkLabel(left_frame, text="Danh sách game", style="Section.TLabel", anchor="w").pack(anchor='w', pady=(0, 4))
+
+        # --- Listbox + scrollbar dọc ---
+        listbox_frame = TtkFrame(left_frame, style="MainBG.TFrame")
+        listbox_frame.pack(fill='both', expand=True)
+
+        self.listbox = tk.Listbox(listbox_frame, width=50, font=("Segoe UI", 12), bg="#23262e", fg="#f5f6fa",
                                   selectbackground="#4f8cff", selectforeground="#fff",
                                   highlightthickness=0, bd=0, relief="flat", activestyle='none')
-        self.listbox.pack(side=tk.LEFT, fill='both', expand=True, padx=(0, 10), pady=5)
-        scrollbar.config(command=self.listbox.yview)
+        self.listbox.pack(side=tk.LEFT, fill='both', expand=True)
         self.listbox.bind('<<ListboxSelect>>', self.on_select)
-        self.listbox.bind("<Enter>", lambda e: self._disable_canvas_mousewheel())
-        self.listbox.bind("<Leave>", lambda e: self._enable_canvas_mousewheel())
         self.listbox.bind("<Enter>", lambda e: self._handle_listbox_mousewheel_bind())
         self.listbox.bind("<Leave>", lambda e: self._handle_listbox_mousewheel_unbind())
 
-        btn_frame = TtkFrame(self.content_frame, style="Card.TFrame")
-        btn_frame.pack(padx=20, pady=8)
+        self.scrollbar_v = Scrollbar(listbox_frame, orient=tk.VERTICAL, command=self.listbox.yview)
+        # KHÔNG pack scrollbar_v ở đây, để pack/remove động trong refresh_list
+        self.listbox.config(yscrollcommand=self._on_listbox_scroll)
 
+        # --- Nút chức năng ---
+        btn_frame = TtkFrame(left_frame, style="MainBG.TFrame")
+        btn_frame.pack(pady=8)
         self._modern_button(btn_frame, 'Thêm', self.add).pack(side=tk.LEFT, padx=5)
         self._modern_button(btn_frame, 'Sửa', self.edit).pack(side=tk.LEFT, padx=5)
         self._modern_button(btn_frame, 'Xóa', self.delete).pack(side=tk.LEFT, padx=5)
         self._modern_button(btn_frame, 'Tìm API', self.search_api).pack(side=tk.LEFT, padx=5)
         self._modern_button(btn_frame, 'Xem JSON', self.show_json).pack(side=tk.LEFT, padx=5)
 
-        # --- Hình nền cho vùng thông tin khi chưa chọn game ---
-        self.bg_image = None
-        self.bg_label = None
+        # --- Cột phải: thông tin game ---
+        # right_frame = TtkFrame(content_frame, style="MainBG.TFrame")
+        # right_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        self.cover_label = TtkLabel(self.content_frame, style="Card.TLabel")
-        self.cover_label.pack(padx=20, pady=10)
+        # --- Thay đổi: Tạo frame mới chứa tiêu đề và ảnh bìa ---
+        info_header_frame = TtkFrame(right_frame, style="MainBG.TFrame")
+        info_header_frame.pack(pady=(0, 8))
 
-        info_frame = TtkFrame(self.content_frame, style="Card.TFrame")
-        info_frame.pack(padx=20, pady=5, fill='x')
+        # Tiêu đề canh giữa phía trên ảnh bìa
+        TtkLabel(info_header_frame, text="Thông tin game", style="Section.TLabel").pack(anchor='center')
 
-        self.info_text = Text(info_frame, height=10, wrap='word', font=("Segoe UI", 11),
+        # Ảnh bìa (cover)
+        self.cover_label = TtkLabel(info_header_frame, style="Card.TLabel")
+        self.cover_label.pack(pady=(4, 0))
+
+        # Info text + scrollbar dọc/ngang
+        info_frame = TtkFrame(right_frame, style="MainBG.TFrame")
+        info_frame.pack(fill='both', expand=True)
+
+        self.info_text = Text(info_frame, height=12, wrap='none', font=("Segoe UI", 11),
                               bg="#23262e", fg="#f5f6fa", bd=0, relief="flat", highlightthickness=0)
-        self.info_text.pack(side=tk.LEFT, fill='x', expand=True)
+        self.info_text.grid(row=0, column=0, sticky='nsew')
+        self.info_scrollbar_v = Scrollbar(info_frame, orient=tk.VERTICAL, command=self.info_text.yview)
+        # KHÔNG grid scrollbar_v ở đây, để grid/remove động trong _update_info_scrollbar_visibility
+        self.info_scrollbar_h = Scrollbar(info_frame, orient=tk.HORIZONTAL, command=self.info_text.xview)
+        self.info_scrollbar_h.grid(row=1, column=0, sticky='ew')
+        self.info_text.config(yscrollcommand=self._on_info_scroll, xscrollcommand=self.info_scrollbar_h.set)
+        info_frame.rowconfigure(0, weight=1)
+        info_frame.columnconfigure(0, weight=1)
         self.info_text.config(state='disabled')
 
-        # --- Không còn label hình nền phía dưới info_text ---
-        # self.bg_label = None
+        self.info_text.bind("<Enter>", lambda e: self._handle_info_mousewheel_bind())
+        self.info_text.bind("<Leave>", lambda e: self._handle_info_mousewheel_unbind())
 
-        self.link_button = TtkButton(self.content_frame, text='Mở liên kết chi tiết', command=self.open_site,
+        # Nút mở liên kết
+        self.link_button = TtkButton(right_frame, text='Mở liên kết chi tiết', command=self.open_site,
                                      style="Accent.TButton", state='disabled', cursor="hand2")
-        self.link_button.pack(pady=(0, 15))
+        self.link_button.pack(pady=(8, 0))
 
         self.selected_game = None
 
         self.update_genre_combobox()
         self.refresh_list()
+
+        self.info_text.bind("<Configure>", lambda e: self._update_info_scrollbar_visibility())
+        self.info_text.bind("<Expose>", lambda e: self._update_info_scrollbar_visibility())
+
+    def _on_resize_main(self, event):
+        # Đảm bảo các frame con luôn fill hết cửa sổ khi phóng to/thu nhỏ
+        self.main_frame.pack(fill='both', expand=True)
+        # ...các frame con đã dùng fill/expand nên không cần xử lý thêm...
 
     def _modern_button(self, parent, text, command):
         return TtkButton(parent, text=text, command=command, style="Modern.TButton", cursor="hand2")
@@ -227,6 +366,19 @@ class MainView:
             for game in games_show:
                 self.listbox.insert(tk.END, f"{game.id}: {game.title}")
 
+        # Tự động bật/tắt thanh cuộn dọc/ngang
+        self.listbox.update_idletasks()
+        if self.listbox.size() > 0 and self.listbox.winfo_height() < self.listbox.size() * 24:
+            self.scrollbar_v.pack(side=tk.RIGHT, fill=tk.Y)
+        else:
+            self.scrollbar_v.pack_forget()
+        # XÓA HOÀN TOÀN các dòng sau:
+        # max_len = max((len(self.listbox.get(i)) for i in range(self.listbox.size())), default=0)
+        # if max_len > 40:
+        #     self.scrollbar_h.pack(side=tk.BOTTOM, fill=tk.X)
+        # else:
+        #     self.scrollbar_h.pack_forget()
+
         self.update_genre_combobox()
         self.cover_label.config(image='', text='')
         self.cover_label.image = None
@@ -236,8 +388,8 @@ class MainView:
         self.link_button.config(state='disabled')
         self.selected_game = None
 
-        self.canvas.update_idletasks()
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        # ẨN/HIỆN thanh cuộn dọc/ngang info_text tùy nội dung
+        self._update_info_scrollbar_visibility()
 
     def update_genre_combobox(self):
         genre_set = set()
@@ -311,15 +463,21 @@ class MainView:
             self.refresh_list()
 
     def delete(self):
-        if not self.is_admin:
-            messagebox.showwarning('Không đủ quyền', 'Chỉ admin mới có thể xóa game')
-            return
+        # Cho phép user xóa game nếu là admin hoặc là user và game do user đó thêm (ví dụ: id > 1000 hoặc có trường owner)
         sel = self.listbox.curselection()
         if not sel:
             messagebox.showwarning('Chưa chọn game', 'Vui lòng chọn game để xóa')
             return
         index = sel[0]
         game = self.sorted_games[index] if hasattr(self, 'sorted_games') else self.manager.games[index]
+        # Quyền xóa: admin hoặc user (cho phép xóa tất cả, hoặc chỉ game của user nếu có trường owner)
+        if not self.is_admin:
+            # Nếu muốn chỉ cho user xóa game của mình, kiểm tra owner ở đây
+            # if getattr(game, "owner", None) != self.user.username:
+            #     messagebox.showwarning('Không đủ quyền', 'Bạn chỉ có thể xóa game do bạn thêm')
+            #     return
+            # Nếu muốn cho user xóa tất cả, bỏ kiểm tra này
+            pass
         if messagebox.askyesno('Xác nhận', f'Bạn có chắc muốn xóa game "{game.title}" không?'):
             self.manager.delete_game(game.id)
             self.update_genre_combobox()
@@ -560,14 +718,25 @@ class MainView:
         top = Toplevel(self.master)
         top.title('Dữ liệu JSON')
         top.configure(bg="#23272f")
-        txt = Text(top, wrap='none', font=("Consolas", 11), bg="#23272f", fg="#e0e6f0", bd=0, relief="flat", highlightthickness=0)
-        txt.pack(side=LEFT, fill=BOTH, expand=True)
-        scroll = Scrollbar(top, command=txt.yview)
-        scroll.pack(side=RIGHT, fill=Y)
-        txt.config(yscrollcommand=scroll.set)
+        # Frame để chứa text và scrollbars
+        frame = TtkFrame(top, style="Card.TFrame")
+        frame.pack(fill=BOTH, expand=True)
+        txt = Text(frame, wrap='none', font=("Consolas", 11), bg="#23272f", fg="#e0e6f0", bd=0, relief="flat", highlightthickness=0)
+        txt.grid(row=0, column=0, sticky='nsew')
+        scroll_y = Scrollbar(frame, command=txt.yview)
+        scroll_y.grid(row=0, column=1, sticky='ns')
+        scroll_x = Scrollbar(frame, orient=tk.HORIZONTAL, command=txt.xview)
+        scroll_x.grid(row=1, column=0, sticky='ew')
+        txt.config(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
         with open(self.manager.path, 'r', encoding='utf-8') as f:
             data = f.read()
         txt.insert('1.0', data)
+
+    def open_site(self):
+        if self.selected_game and self.selected_game.site_url:
+            webbrowser.open(self.selected_game.site_url)
 
     def on_select(self, event):
         selection = event.widget.curselection()
@@ -586,6 +755,9 @@ class MainView:
                 self.info_text.config(state='disabled')
                 self.link_button.config(state='disabled')
                 self.selected_game = None
+                # Ẩn thanh cuộn ngang khi không chọn game
+                self.info_scrollbar_h.grid_remove()
+                self.info_scrollbar_v.grid_remove()
                 return
             # Lưu lại game đang chọn
             self.selected_game = game
@@ -601,7 +773,8 @@ class MainView:
                     with urllib.request.urlopen(url) as u:
                         raw_data = u.read()
                     im = Image.open(io.BytesIO(raw_data))
-                    im = im.resize((150, 200))
+                    # Sửa: tăng kích thước ảnh bìa lên (ví dụ 200x270)
+                    im = im.resize((200, 270))
                     photo = ImageTk.PhotoImage(im)
                     self.cover_label.config(image=photo, text='')
                     self.cover_label.image = photo
@@ -626,201 +799,110 @@ Liên kết chi tiết: {safe_text(game.site_url)}
             self.info_text.insert(tk.END, info.strip())
             self.info_text.config(state='disabled')
             self.link_button.config(state='normal' if game.site_url else 'disabled')
+            # ẨN/HIỆN thanh cuộn dọc/ngang info_text tùy nội dung
+            self._update_info_scrollbar_visibility()
         else:
-            # ...existing code...
-            pass
+            # Không chọn game nào: ẩn thanh cuộn ngang/dọc
+            self.info_scrollbar_h.grid_remove()
+            self.info_scrollbar_v.grid_remove()
+            self._update_info_scrollbar_visibility()
 
-    def open_site(self):
-        if self.selected_game and self.selected_game.site_url:
-            webbrowser.open(self.selected_game.site_url)
+    def _update_info_scrollbar_visibility(self):
+        # Kiểm tra nếu nội dung info_text đủ dài để cuộn thì hiện, ngược lại ẩn
+        self.info_text.update_idletasks()
+        first_y, last_y = self.info_text.yview()
+        first_x, last_x = self.info_text.xview()
+        content = self.info_text.get('1.0', 'end-1c').strip()
+        # Thanh cuộn dọc
+        if last_y - first_y < 1.0 and content:
+            if not self.info_scrollbar_v.winfo_ismapped():
+                self.info_scrollbar_v.grid(row=0, column=1, sticky='ns')
+        else:
+            if self.info_scrollbar_v.winfo_ismapped():
+                self.info_scrollbar_v.grid_remove()
+        # Thanh cuộn ngang
+        if last_x - first_x < 1.0 and content:
+            if not self.info_scrollbar_h.winfo_ismapped():
+                self.info_scrollbar_h.grid(row=1, column=0, sticky='ew')
+        else:
+            if self.info_scrollbar_h.winfo_ismapped():
+                self.info_scrollbar_h.grid_remove()
 
-    def _on_canvas_configure(self, event):
-        # Đảm bảo content_frame luôn rộng bằng canvas khi thay đổi kích thước
-        self.canvas.itemconfig(self.content_window, width=event.width)
+        # Nếu đã hiện thanh cuộn ngang mà sau khi kéo giãn đủ rộng thì ẩn ngay lập tức
+        self.info_text.after(50, self._auto_hide_info_scrollbar_h)
+
+    def _auto_hide_info_scrollbar_h(self):
+        # Tự động ẩn thanh cuộn ngang nếu không còn cần thiết (sau khi kéo giãn)
+        self.info_text.update_idletasks()
+        first_x, last_x = self.info_text.xview()
+        content = self.info_text.get('1.0', 'end-1c').strip()
+        if last_x - first_x >= 1.0 or not content:
+            if self.info_scrollbar_h.winfo_ismapped():
+                self.info_scrollbar_h.grid_remove()
+
+    def _on_listbox_scroll(self, *args):
+        self.scrollbar_v.set(*args)
+        # Ẩn/hiện scrollbar_v động
+        self.listbox.update_idletasks()
+        first, last = self.listbox.yview()
+        if last - first < 1.0:
+            if not self.scrollbar_v.winfo_ismapped():
+                self.scrollbar_v.pack(side=tk.RIGHT, fill=tk.Y)
+        else:
+            if self.scrollbar_v.winfo_ismapped():
+                self.scrollbar_v.pack_forget()
+
+    def _on_info_scroll(self, *args):
+        self.info_scrollbar_v.set(*args)
+        # Ẩn/hiện scrollbar_v động
+        self.info_text.update_idletasks()
+        first, last = self.info_text.yview()
+        if last - first < 1.0:
+            if not self.info_scrollbar_v.winfo_ismapped():
+                self.info_scrollbar_v.grid(row=0, column=1, sticky='ns')
+        else:
+            if self.info_scrollbar_v.winfo_ismapped():
+                self.info_scrollbar_v.grid_remove()
 
     def _handle_listbox_mousewheel_bind(self):
-        # Nếu listbox có thể cuộn (nhiều item, xuất hiện thanh cuộn), chỉ bind mousewheel cho listbox
+        # Chỉ bind mousewheel nếu có thể cuộn
         if self.listbox.yview()[1] - self.listbox.yview()[0] < 1.0:
-            self._disable_canvas_mousewheel()
             self.listbox.bind("<MouseWheel>", self._on_listbox_mousewheel)
         else:
-            # Nếu không thể cuộn, để canvas nhận mousewheel
-            self._enable_canvas_mousewheel()
             self.listbox.unbind("<MouseWheel>")
 
     def _handle_listbox_mousewheel_unbind(self):
         self.listbox.unbind("<MouseWheel>")
-        self._enable_canvas_mousewheel()
 
     def _handle_info_mousewheel_bind(self):
-        # Nếu info_text có thể cuộn (nội dung dài), chỉ bind mousewheel cho info_text
-        # Nếu không thể cuộn (nội dung vừa đủ hoặc trống), để canvas nhận mousewheel
+        # Chỉ bind mousewheel nếu có thể cuộn
         if self.info_text.yview()[1] - self.info_text.yview()[0] < 1.0:
-            self._disable_canvas_mousewheel()
             self.info_text.bind("<MouseWheel>", self._on_info_mousewheel)
         else:
-            self._enable_canvas_mousewheel()
             self.info_text.unbind("<MouseWheel>")
 
     def _handle_info_mousewheel_unbind(self):
         self.info_text.unbind("<MouseWheel>")
-        self._enable_canvas_mousewheel()
 
-    def _enable_canvas_mousewheel(self):
-        if not self._canvas_mousewheel_enabled:
-            self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-            self._canvas_mousewheel_enabled = True
+    def _set_default_pane_size(self):
+        paned = self._paned
+        total = paned.winfo_width()
+        if total <= 1:
+            self.master.after(100, self._set_default_pane_size)
+            return
+        left_size = int(total * self._default_pane_ratio)
+        try:
+            paned.sashpos(0, left_size)
+            self._pane_initialized = True
+        except Exception:
+            pass
 
-    def _disable_canvas_mousewheel(self):
-        if self._canvas_mousewheel_enabled:
-            self.canvas.unbind_all("<MouseWheel>")
-            self._canvas_mousewheel_enabled = False
+    def _reset_pane_size(self, event=None):
+        # Đặt lại tỷ lệ mặc định khi double click vào sash
+        self._set_default_pane_size()
 
-    def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    def _on_listbox_mousewheel(self, event):
-        self.listbox.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        return "break"
-
-    def _on_info_mousewheel(self, event):
-        self.info_text.yview_scroll(int(-1 * (event.delta / 120)), "units")
-        return "break"
-
-    def _bind_canvas_mousewheel(self):
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
-    def _unbind_canvas_mousewheel(self):
-        self.canvas.unbind_all("<MouseWheel>")
-
-    def _bind_info_mousewheel(self):
-        self.info_text.bind_all("<MouseWheel>", self._on_info_mousewheel)
-
-    def _unbind_info_mousewheel(self):
-        self.info_text.unbind_all("<MouseWheel>")
-
-    def _sort_and_reindex_games(self):
-        # Sắp xếp games theo chữ cái đầu của title (A-Z, không phân biệt hoa thường)
-        self.manager.games.sort(key=lambda g: (g.title or '').lower())
-        # Đánh lại id theo thứ tự mới
-        for idx, game in enumerate(self.manager.games, 1):
-            game.id = idx
-        self.manager.save_games()
-
-# --- login_view.py ---
-
-class LoginView(Dialog):
-    def body(self, master):
-        self.winfo_toplevel().title("Đăng nhập")
-        master.configure(bg="#23272f")
-        tk.Label(master, text='Tên đăng nhập:', bg="#23272f", fg="#e6e6f0", font=("Segoe UI", 11)).grid(row=0, sticky='e')
-        tk.Label(master, text='Mật khẩu:', bg="#23272f", fg="#e6e6f0", font=("Segoe UI", 11)).grid(row=1, sticky='e')
-
-        self.e1 = TtkEntry(master, font=("Segoe UI", 11))
-        self.e2 = TtkEntry(master, show='*', font=("Segoe UI", 11))
-
-        self.e1.grid(row=0, column=1, padx=5, pady=5)
-        self.e2.grid(row=1, column=1, padx=5, pady=5)
-        self.e1.focus_set()
-        self.e1.configure(insertbackground="#4f8cff")
-        self.e2.configure(insertbackground="#4f8cff")
-        self.e1.bind('<Return>', lambda e: self.e2.focus_set())
-        self.e2.bind('<Return>', lambda e: self.ok())
-        return self.e1
-
-    def apply(self):
-        self.result = {'username': self.e1.get(), 'password': self.e2.get()}
-
-# --- game_form.py ---
-
-class GameForm(Dialog):
-    def __init__(self, parent, game=None):
-        self.game = game
-        super().__init__(parent, title='Form Game')
-
-    def body(self, master):
-        # Đổi màu nền toàn bộ dialog, loại bỏ viền trắng xung quanh, đồng bộ với app
-        self.configure(bg="#23272f")
-        master.configure(bg="#23272f")
-        style = Style(master)
-        style.theme_use('clam')
-        style.configure("Card.TFrame", background="#23272f")
-        style.configure("Card.TLabel", background="#23272f", foreground="#e0e6f0", font=("Segoe UI", 12, "bold"))
-        style.configure("Accent.TButton", background="#2e8fff", foreground="#fff", font=("Segoe UI", 11, "bold"), borderwidth=0)
-        style.map("Accent.TButton", background=[('active', '#1e6fdc')])
-
-        fields = [
-            'Tên', 'Mô tả', 'Ngày phát hành', 'Nhà phát triển',
-            'Thể loại', 'Hệ máy', 'Liên kết chi tiết'
-        ]
-        self.entries = []
-
-        frm = TtkFrame(master, style="Card.TFrame")
-        frm.pack(padx=0, pady=0, fill='both', expand=True)  # Không padding để sát viền
-
-        for i, label in enumerate(fields):
-            TtkLabel(frm, text=f'{label}:', style="Card.TLabel").pack(anchor='w', padx=24, pady=(8 if i == 0 else 2, 2))
-            entry = tk.Entry(
-                frm,
-                font=("Segoe UI", 11),
-                width=40,
-                bg="#23262e",
-                fg="#f5f6fa",
-                insertbackground="#4f8cff",
-                relief="flat",
-                highlightthickness=1,
-                highlightbackground="#31343c",
-                highlightcolor="#4f8cff",
-                borderwidth=0,
-                disabledbackground="#23262e",
-                disabledforeground="#b0b6c2"
-            )
-            entry.pack(fill='x', padx=24, pady=2, ipady=6)
-            self.entries.append(entry)
-
-        # Gán giá trị nếu sửa
-        if self.game:
-            values = [
-                self.game.title or '',
-                self.game.description or '',
-                self.game.released or '',
-                self.game.developers or '',
-                self.game.genres or '',
-                self.game.platforms or '',
-                self.game.site_url or ''
-            ]
-            for entry, value in zip(self.entries, values):
-                entry.insert(0, value)
-
-        self.entries[0].focus_set()
-        for i in range(len(self.entries) - 1):
-            self.entries[i].bind('<Return>', lambda e, idx=i: self.entries[idx+1].focus_set())
-        self.entries[-1].bind('<Return>', lambda e: self.ok())
-        return self.entries[0]
-
-    def buttonbox(self):
-        # Sử dụng pack thay cho grid để tránh lỗi, đồng bộ màu sắc
-        box = tk.Frame(self, bg="#23272f")
-        style = Style(self)
-        style.theme_use('clam')
-        style.configure("Accent.TButton", background="#2e8fff", foreground="#fff", font=("Segoe UI", 11, "bold"), borderwidth=0)
-        style.map("Accent.TButton", background=[('active', '#1e6fdc')])
-        btn_width = 14
-        ok_btn = TtkButton(box, text="✔ OK", style="Accent.TButton", width=btn_width, command=self.ok)
-        cancel_btn = TtkButton(box, text="✖ Hủy", style="Accent.TButton", width=btn_width, command=self.cancel)
-        ok_btn.pack(side=tk.LEFT, padx=(0, 8), pady=10, expand=True, fill='x')
-        cancel_btn.pack(side=tk.LEFT, padx=(8, 0), pady=10, expand=True, fill='x')
-        self.bind("<Return>", lambda e: self.ok())
-        self.bind("<Escape>", lambda e: self.cancel())
-        box.pack(pady=(10, 0), fill='x')
-
-    def apply(self):
-        self.result = {
-            'title': self.entries[0].get(),
-            'description': self.entries[1].get(),
-            'released': self.entries[2].get(),
-            'developers': self.entries[3].get(),
-            'genres': self.entries[4].get(),
-            'platforms': self.entries[5].get(),
-            'site_url': self.entries[6].get()
-        }
+    def _on_pane_configure(self, event=None):
+        # Nếu chưa từng set mặc định, set lại khi lần đầu render
+        if not self._pane_initialized:
+            self._set_default_pane_size()
+        # ...nếu đã set rồi thì không làm gì, tránh nhảy sash khi resize bình thường...

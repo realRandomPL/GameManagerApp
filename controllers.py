@@ -3,7 +3,7 @@ from tkinter import messagebox
 import os
 import requests
 from models import GameManager, UserManager
-from views import MainView, LoginView
+from views import MainView  # Xóa LoginView nếu không dùng
 from tkinter.ttk import Frame, Label, Button, Entry, Style
 
 # --- app_controller.py ---
@@ -14,7 +14,7 @@ class GameApp:
         self.user = user
         self.root = root
         self.on_logout = on_logout
-        self.root.title("Bộ sưu tập game")
+        self.root.title("Ứng dụng quản lý game cá nhân")
         self.manager = GameManager(username=self.user.username)  # games riêng cho từng user, admin dùng chung
         self.api = GiantBombClient()
 
@@ -47,7 +47,11 @@ class AuthController:
                 return None
             if mode == 'register':
                 reg_result = self._show_register_dialog(parent)
-                if reg_result == "back":
+                if reg_result == "back" or reg_result is None:
+                    continue
+                # Sửa: kiểm tra reg_result là tuple trước khi unpack
+                if not isinstance(reg_result, tuple) or len(reg_result) != 2:
+                    messagebox.showerror("Lỗi", "Thông tin không hợp lệ.", parent=parent)
                     continue
                 username, password = reg_result
                 if not username or not password:
@@ -107,24 +111,6 @@ class AuthController:
         frm = Frame(dialog, style="Card.TFrame")
         frm.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.9, relheight=0.8)
 
-        # --- Thêm hình ảnh chủ đề ở trên, kiểm tra đường dẫn tuyệt đối ---
-        img_path = os.path.join(os.path.dirname(__file__), "data", "login_banner.png")
-        img = None
-        if os.path.exists(img_path):
-            try:
-                img = PhotoImage(file=img_path)
-            except Exception:
-                img = None
-        else:
-            try:
-                img = PhotoImage(file="data/login_banner.png")
-            except Exception:
-                img = None
-        if img:
-            img_label = TkLabel(frm, image=img, bg="#23272f")
-            img_label.image = img
-            img_label.pack(pady=(0, 10))
-
         Label(frm, text="Chọn chế độ đăng nhập", style="Card.TLabel", anchor=CENTER).pack(pady=(0, 15))
 
         mode_var = StringVar(value="login")
@@ -170,24 +156,6 @@ class AuthController:
 
         frm = Frame(dialog, style="Card.TFrame")
         frm.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.9, relheight=0.8)
-
-        # --- Thêm hình ảnh chủ đề ở trên, kiểm tra đường dẫn tuyệt đối ---
-        img_path = os.path.join(os.path.dirname(__file__), "data", "login_banner.png")
-        img = None
-        if os.path.exists(img_path):
-            try:
-                img = PhotoImage(file=img_path)
-            except Exception:
-                img = None
-        else:
-            try:
-                img = PhotoImage(file="data/login_banner.png")
-            except Exception:
-                img = None
-        if img:
-            img_label = TkLabel(frm, image=img, bg="#23262e")
-            img_label.image = img
-            img_label.pack(pady=(0, 10))
 
         Label(frm, text="Tên đăng nhập:", style="Card.TLabel").grid(row=1, column=0, sticky='e', pady=8, padx=5)
         Label(frm, text="Mật khẩu:", style="Card.TLabel").grid(row=2, column=0, sticky='e', pady=8, padx=5)
@@ -247,24 +215,6 @@ class AuthController:
 
         frm = Frame(dialog, style="Card.TFrame")
         frm.place(relx=0.5, rely=0.5, anchor="center", relwidth=0.9, relheight=0.8)
-
-        # --- Thêm hình ảnh chủ đề ở trên, kiểm tra đường dẫn tuyệt đối ---
-        img_path = os.path.join(os.path.dirname(__file__), "data", "login_banner.png")
-        img = None
-        if os.path.exists(img_path):
-            try:
-                img = PhotoImage(file=img_path)
-            except Exception:
-                img = None
-        else:
-            try:
-                img = PhotoImage(file="data/login_banner.png")
-            except Exception:
-                img = None
-        if img:
-            img_label = TkLabel(frm, image=img, bg="#23262e")
-            img_label.image = img
-            img_label.pack(pady=(0, 10))
 
         Label(frm, text="Tên đăng nhập:", style="Card.TLabel").grid(row=1, column=0, sticky='e', pady=8, padx=5)
         Label(frm, text="Mật khẩu:", style="Card.TLabel").grid(row=2, column=0, sticky='e', pady=8, padx=5)

@@ -110,8 +110,9 @@ class GameManager:
                 game_dict = game.to_dict()
                 # Làm sạch dữ liệu trước khi lưu
                 cleaned_dict = self._clean_game_dict(game_dict)
+                # Loại bỏ các trường None để file JSON gọn hơn
+                cleaned_dict = {k: v for k, v in cleaned_dict.items() if v is not None}
                 data.append(cleaned_dict)
-            
             with open(self.path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             print(f"Đã lưu {len(self.games)} games vào {self.path}")
