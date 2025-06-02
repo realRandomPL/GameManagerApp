@@ -1,0 +1,222 @@
+[
+  {
+    "id": 1,
+    "title": "Dragon Ball",
+    "description": "Dragon Ball is a remake of Dragon Ball 3: Gokūden for WonderSwan Color.",
+    "released": "2003-11-20",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/7/79739/1294943-180px_wsc_game_dragon_ball.gif",
+    "developers": "TOSE Co., Ltd.",
+    "genres": "Role-Playing",
+    "platforms": "WonderSwan Color",
+    "site_url": "https://www.giantbomb.com/dragon-ball/3030-30307/"
+  },
+  {
+    "id": 2,
+    "title": "Dragon Ball Z: Kakarot",
+    "description": "An action RPG that chronicles the entire Dragon Ball Z storyline.",
+    "released": "2020-01-16",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3532455-77e281650e1e.jpg",
+    "developers": "CyberConnect2 Co., Ltd., Bird Studio",
+    "genres": "Action, Role-Playing",
+    "platforms": "PC, Xbox One, PlayStation 4, Nintendo Switch, Google Stadia, PlayStation 5, Xbox Series X|S",
+    "site_url": "https://www.giantbomb.com/dragon-ball-z-kakarot/3030-71920/"
+  },
+  {
+    "id": 3,
+    "title": "Clair Obscur: Expedition 33",
+    "description": "Clair Obscur: Expedition 33 is a turn-based role-playing game set in a fantasy version of Paris where portions of the population are erased once a year by \"The Paintress\". It is the expedition's goal to destroy her and end the cycle.",
+    "released": "2025-04-24",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3726187-2075514217-proje.jpg",
+    "developers": "Sandfall Interactive",
+    "genres": "Role-Playing",
+    "platforms": "PC, PlayStation 5, Xbox Series X|S",
+    "site_url": "https://www.giantbomb.com/clair-obscur-expedition-33/3030-91141/"
+  },
+  {
+    "id": 4,
+    "title": "Sword Art Online: Lost Song",
+    "description": "A third Sword Art Online game developed by Bandai Namco, this time set in the world of ALfheim Online.",
+    "released": "2015-03-26",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3469378-1557029680-48827.jpg",
+    "developers": "Artdink",
+    "genres": "Action, Role-Playing",
+    "platforms": "PlayStation 3, PlayStation Network (PS3), PC, PlayStation Vita, PlayStation Network (Vita), PlayStation 4",
+    "site_url": "https://www.giantbomb.com/sword-art-online-lost-song/3030-47862/"
+  },
+  {
+    "id": 5,
+    "title": "Sword Art Online: Alicization Lycoris ",
+    "description": "Sword Art Online: Alicization Lycoris is a Japanese RPG game. The events of this game are set to take place in Underworld and it follow the events of the Sword Art Online anime.",
+    "released": "2020-07-09",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3472803-4853282334-51203.jpg",
+    "developers": "Aquria",
+    "genres": "Action, Role-Playing",
+    "platforms": "PC, Xbox One, PlayStation 4, Nintendo Switch",
+    "site_url": "https://www.giantbomb.com/sword-art-online-alicization-lycoris/3030-72779/"
+  },
+  {
+    "id": 6,
+    "title": "Dark Souls",
+    "description": "A quasi-sequel to From Software's action-RPG Demon's Souls, set in a new universe while retaining most of the basic gameplay and the high level of challenge. It features a less-linear world, a new checkpoint system in the form of bonfires, and the unique Humanity system.",
+    "released": "2011-09-22",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/8/82063/2555200-dsclean.jpg",
+    "developers": "FromSoftware, Inc., Virtuos Ltd., QLOC",
+    "genres": "Role-Playing, Action-Adventure",
+    "platforms": "Xbox 360, PlayStation 3, Xbox 360 Games Store, PC, Xbox One, PlayStation 4, Nintendo Switch",
+    "site_url": "https://www.giantbomb.com/dark-souls/3030-32697/"
+  },
+  {
+    "id": 7,
+    "title": "Dark Souls II: Scholar of the First Sin",
+    "description": "A remastered release of Dark Souls II, featuring a graphical upgrade, increased online player limit, remixed locations for items and enemies, and includes all of the previously released DLC.",
+    "released": "2015-04-01",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/18/187968/2732892-rsz_1image.jpg",
+    "developers": "FromSoftware, Inc.",
+    "genres": "Role-Playing, Action-Adventure",
+    "platforms": "Xbox 360, PlayStation 3, PlayStation Network (PS3), PC, Xbox One, PlayStation 4",
+    "site_url": "https://www.giantbomb.com/dark-souls-ii-scholar-of-the-first-sin/3030-49122/"
+  },
+  {
+    "id": 8,
+    "title": "Dark Souls III",
+    "description": "This game melds elements from all previous Souls games and concludes the Dark Souls trilogy.",
+    "released": "2016-03-24",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/8/87790/3081870-box_ds3.jpg",
+    "developers": "FromSoftware, Inc.",
+    "genres": "Role-Playing, Action-Adventure",
+    "platforms": "PC, Xbox One, PlayStation 4",
+    "site_url": "https://www.giantbomb.com/dark-souls-iii/3030-49884/"
+  },
+  {
+    "id": 9,
+    "title": "Elden Ring",
+    "description": "Elden Ring by FromSoftware is a collaboration between Hidetaka Miyazaki and George R.R. Martin.",
+    "released": "2022-02-25",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3532465-2909474649-co4jn.jpg",
+    "developers": "FromSoftware, Inc.",
+    "genres": "Action, Role-Playing",
+    "platforms": "PC, Xbox One, PlayStation 4, PlayStation 5, Xbox Series X|S, Nintendo Switch 2",
+    "site_url": "https://www.giantbomb.com/elden-ring/3030-73745/"
+  },
+  {
+    "id": 10,
+    "title": "Elden Ring Nightreign",
+    "description": "Nightreign is a standalone multiplayer game set in the world of Elden Ring.",
+    "released": "2025-05-30",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3744461-game-box-art-ern-2x-c.jpg",
+    "developers": "FromSoftware, Inc.",
+    "genres": "Action-Adventure",
+    "platforms": "PC, PlayStation 4, PlayStation 5, Xbox Series X|S",
+    "site_url": "https://www.giantbomb.com/elden-ring-nightreign/3030-92371/"
+  },
+  {
+    "id": 11,
+    "title": "God of War 4",
+    "description": "God of War is a soft reboot on the franchise of the same name. It sees Kratos and his son Atreus traverse a world of Norse myths.",
+    "released": "2018-04-20",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/33/338034/3287019-3786480319-Z7hV9.png",
+    "developers": "SIE Santa Monica Studio",
+    "genres": "Action-Adventure",
+    "platforms": "PC, PlayStation 4",
+    "site_url": "https://www.giantbomb.com/god-of-war/3030-54229/"
+  },
+  {
+    "id": 12,
+    "title": "God of War",
+    "description": "Play as the Spartan warrior, Kratos, as he cuts his way through armies of mythological creatures on a path to kill Ares, the God of War, and gain redemption for his past sins.",
+    "released": "2005-03-22",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/8/87790/2139780-box_gow.png",
+    "developers": "SIE Santa Monica Studio, Sonic Mayhem",
+    "genres": "Action-Adventure",
+    "platforms": "PlayStation 2",
+    "site_url": "https://www.giantbomb.com/god-of-war/3030-6959/"
+  },
+  {
+    "id": 13,
+    "title": "God of War Ragnarök",
+    "description": "Kratos' adventures through Norse mythology comes to an end in God of War Ragnarök.",
+    "released": "2022-11-09",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3532837-0378849544-co5s5.png",
+    "developers": "PlayStation Studios, SIE Santa Monica Studio",
+    "genres": "Action-Adventure",
+    "platforms": "PC, PlayStation 4, PlayStation 5",
+    "site_url": "https://www.giantbomb.com/god-of-war-ragnarok/3030-80643/"
+  },
+  {
+    "id": 14,
+    "title": "God of War III",
+    "description": "God of War III puts players back in the role of Kratos to continue his brutal and bloody war against Olympus as he sets his sights on Zeus himself.",
+    "released": "2010-03-16",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/8/87790/1817063-box_gow3.png",
+    "developers": "SIE Santa Monica Studio, Pencil Test Studios",
+    "genres": "Action-Adventure",
+    "platforms": "PlayStation 3, PlayStation 4, PlayStation 5",
+    "site_url": "https://www.giantbomb.com/god-of-war-iii/3030-20461/"
+  },
+  {
+    "id": 15,
+    "title": "Age of Empires IV",
+    "description": "The fourth Age of Empires.",
+    "released": "2021-10-28",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/33/338034/3296757-5206642105-apps.50806.13544212316148791.0ab819ba-bbe9-4cd3-a296-1f2cb4ece49d.7ae3290f-b69e-4301-b8bb-e49a54c8f621.jpg",
+    "developers": "Relic Entertainment, World's Edge",
+    "genres": "Real-Time Strategy",
+    "platforms": "PC",
+    "site_url": "https://www.giantbomb.com/age-of-empires-iv/3030-60914/"
+  },
+  {
+    "id": 16,
+    "title": "Age of Empires",
+    "description": "Pick up your trusty club and get ready to crush some Neolithic skulls in this historically based Real time strategy game focusing on the early Stone Age through till the late Iron Age.",
+    "released": "1997-10-26",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/1/17557/1131792-age_of_empires_user.jpg",
+    "developers": "Ensemble Studios, MacSoft",
+    "genres": "Strategy, Real-Time Strategy",
+    "platforms": "Mac, PC",
+    "site_url": "https://www.giantbomb.com/age-of-empires/3030-10485/"
+  },
+  {
+    "id": 17,
+    "title": "Age of Empires III: The Asian Dynasties",
+    "description": "The second expansion pack released for Age of Empires III. It centers around Asian civilizations and introduces a variety of new multiplayer modes, campaigns, and units. ",
+    "released": "2007-10-23",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/1/14036/654352-aoeiiitadboxart.jpg",
+    "developers": "Big Huge Games, MacSoft",
+    "genres": "Strategy, Simulation, Real-Time Strategy",
+    "platforms": "Mac, PC",
+    "site_url": "https://www.giantbomb.com/age-of-empires-iii-the-asian-dynasties/3030-11786/"
+  },
+  {
+    "id": 18,
+    "title": "Black Myth: Wukong",
+    "description": "An adventure/brawler based on Journey to the West and other Chinese literature and myth",
+    "released": "2024-08-20",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3661208-1018858124-black.png",
+    "developers": "Game Science Studio",
+    "genres": "Brawler, Action-Adventure",
+    "platforms": "PC, PlayStation 5, Xbox Series X|S",
+    "site_url": "https://www.giantbomb.com/black-myth-wukong/3030-80279/"
+  },
+  {
+    "id": 19,
+    "title": "Detroit: Become Human",
+    "description": "An interactive drama from the studio behind Heavy Rain, Detroit follows three androids in near-future 2038 as more androids in the city become fully sentient.",
+    "released": "2018-05-25",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/8/87790/3022574-box_dbh.png",
+    "developers": "Quantic Dream",
+    "genres": "Adventure",
+    "platforms": "PC, PlayStation 4",
+    "site_url": "https://www.giantbomb.com/detroit-become-human/3030-51351/"
+  },
+  {
+    "id": 20,
+    "title": "Death Stranding",
+    "description": "The first game from game director Hideo Kojima after his departure from Konami, Death Stranding is a third-person action-adventure game where the goal is to dredge through a ravaged wasteland to reconnect isolated cities and prevent a mass extinction.",
+    "released": "2019-11-08",
+    "cover_url": "https://www.giantbomb.com/a/uploads/scale_medium/20/201266/3531788-6677026638-co5vq.jpg",
+    "developers": "Kojima Productions, PlayStation Studios",
+    "genres": "Action-Adventure",
+    "platforms": "Mac, PC, iPhone, iPad, PlayStation 4, PlayStation 5, Xbox Series X|S, Amazon Luna",
+    "site_url": "https://www.giantbomb.com/death-stranding/3030-54232/"
+  }
+]
