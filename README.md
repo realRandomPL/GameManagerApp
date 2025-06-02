@@ -1,7 +1,7 @@
 # Hướng dẫn sử dụng ứng dụng Quản lý bộ sưu tập game
 
 ## 1. Cài đặt để chạy file code
-- Tải folder bên release 
+- Tải ứng dụng bên phần release 
 
 ## 2. Đăng nhập / Đăng ký
 - **Admin mặc định:**  
