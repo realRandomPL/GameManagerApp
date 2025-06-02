@@ -5,9 +5,7 @@
 - Hệ điều hành: Windows (khuyến nghị)
 
 ## 2. Cài đặt để chạy file code
-```bash
-pip install pillow requests
-```
+- Tải file .exe bên release + folder data nếu muốn có sẵn data của game 
 
 ## 3. Đăng nhập / Đăng ký
 - **Admin mặc định:**  
