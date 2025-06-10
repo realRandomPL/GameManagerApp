@@ -154,11 +154,18 @@ class GameApp:
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Chào mừng!")
         dialog.configure(bg="#23272f")
+        # Cho phép thu nhỏ (minimize) và giữ nút minimize trên titlebar
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
+        # Đảm bảo cửa sổ có nút minimize trên mọi Windows
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
+
         frm = tk.Frame(dialog, bg="#23272f")
         frm.place(relx=0.5, rely=0.5, anchor='center', width=dialog_width-40, height=dialog_height-40)
 
@@ -216,14 +223,18 @@ class GameApp:
 
     def _show_login_dialog(self, parent):
         dialog_width = 540
-        dialog_height = 520  # Tăng chiều cao để không bị khuất nút
+        dialog_height = 520
         dialog = tk.Toplevel(parent)
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Đăng nhập")
         dialog.configure(bg="#23272f")
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
         frm = tk.Frame(dialog, bg="#23272f")
@@ -407,14 +418,18 @@ class GameApp:
 
     def _show_register_dialog(self, parent):
         dialog_width = 540
-        dialog_height = 570  # Tăng chiều cao để luôn hiện nút quay lại
+        dialog_height = 570
         dialog = tk.Toplevel(parent)
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Đăng ký tài khoản")
         dialog.configure(bg="#23272f")
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
         frm = tk.Frame(dialog, bg="#23272f")
@@ -615,11 +630,18 @@ class AuthController:
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Chào mừng!")
         dialog.configure(bg="#23272f")
+        # Cho phép thu nhỏ (minimize) và giữ nút minimize trên titlebar
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
+        # Đảm bảo cửa sổ có nút minimize trên mọi Windows
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
+
         frm = tk.Frame(dialog, bg="#23272f")
         frm.place(relx=0.5, rely=0.5, anchor='center', width=dialog_width-40, height=dialog_height-40)
 
@@ -677,14 +699,18 @@ class AuthController:
 
     def _show_login_dialog(self, parent):
         dialog_width = 540
-        dialog_height = 520  # Tăng chiều cao để không bị khuất nút
+        dialog_height = 520
         dialog = tk.Toplevel(parent)
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Đăng nhập")
         dialog.configure(bg="#23272f")
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
         frm = tk.Frame(dialog, bg="#23272f")
@@ -868,14 +894,18 @@ class AuthController:
 
     def _show_register_dialog(self, parent):
         dialog_width = 540
-        dialog_height = 570  # Tăng chiều cao để luôn hiện nút quay lại
+        dialog_height = 570
         dialog = tk.Toplevel(parent)
         dialog.withdraw()
         self._set_dialog_appearance(dialog, width=dialog_width, height=dialog_height, title="Đăng ký tài khoản")
         dialog.configure(bg="#23272f")
         dialog.resizable(False, False)
+        dialog.transient(parent)
+        dialog.focus_force()
+        dialog.lift()
+        dialog.grab_set()
         try:
-            dialog.attributes('-toolwindow', True)
+            dialog.overrideredirect(False)
         except Exception:
             pass
         frm = tk.Frame(dialog, bg="#23272f")

@@ -1004,18 +1004,27 @@ Liên kết chi tiết: {safe_text(game.site_url)}
     def _handle_info_mousewheel_bind(self):
         # Chỉ bind mousewheel nếu có thể cuộn
         if self.info_text.yview()[1] - self.info_text.yview()[0] < 1.0:
-            self.info_text.bind("<MouseWheel>", self._on_info_mousewheel)
+            self.info_text.bind("<MouseWheel>", self._on_info_mousewheel)  # Windows/macOS
+            self.info_text.bind("<Button-4>", self._on_info_mousewheel)    # Linux scroll up
+            self.info_text.bind("<Button-5>", self._on_info_mousewheel)    # Linux scroll down
         else:
-            self.info_text.unbind("<MouseWheel>")
+            self._handle_info_mousewheel_unbind()
 
     def _handle_info_mousewheel_unbind(self):
         self.info_text.unbind("<MouseWheel>")
+        self.info_text.unbind("<Button-4>")
+        self.info_text.unbind("<Button-5>")
 
     # --- THÊM HÀM NÀY để tránh lỗi AttributeError ---
     def _on_info_mousewheel(self, event):
-        # Cho phép cuộn nội dung info_text bằng chuột
+        # Cho phép cuộn nội dung info_text bằng chuột (Windows, macOS, Linux)
         if event.delta:
+            # Windows, macOS
             self.info_text.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        elif event.num == 4:  # Linux scroll up
+            self.info_text.yview_scroll(-1, "units")
+        elif event.num == 5:  # Linux scroll down
+            self.info_text.yview_scroll(1, "units")
         return "break"
 
     def _set_default_pane_size(self):
