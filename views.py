@@ -527,6 +527,10 @@ class MainView:
         form = GameForm(self.master)
         data = form.result
         if data:
+            # Kiểm tra trùng tên game
+            if self._game_exists(data['title']):
+                messagebox.showwarning('Trùng tên', f'Game "{data["title"]}" đã có trong danh sách!')
+                return
             new_game = Game(
                 title=data['title'],
                 description=data['description'],
@@ -774,6 +778,11 @@ class MainView:
                             'aliases': None
                         }
 
+                        # Kiểm tra trùng tên game trước khi mở form
+                        if self._game_exists(data['title']):
+                            messagebox.showwarning('Trùng tên', f'Game "{data["title"]}" đã có trong danh sách!')
+                            continue
+
                         form_data = {
                             'title': data['title'],
                             'description': data['description'],
@@ -786,6 +795,10 @@ class MainView:
                         form = GameForm(self.master, Game(**form_data))
                         filled = form.result
                         if filled:
+                            # Kiểm tra lại lần nữa nếu user đổi tên thành tên đã có
+                            if self._game_exists(filled['title']):
+                                messagebox.showwarning('Trùng tên', f'Game "{filled["title"]}" đã có trong danh sách!')
+                                continue
                             new_game = Game(
                                 title=filled['title'],
                                 description=filled['description'],
@@ -826,7 +839,6 @@ class MainView:
                 top.wait_window()
 
             show_result_window()
-    # ...existing code...
 
     def show_json(self):
         top = Toplevel(self.master)
@@ -1057,3 +1069,11 @@ Liên kết chi tiết: {safe_text(game.site_url)}
         self.manager = GameManager(username=username)
         self._original_order = None  # Reset lại thứ tự gốc
         self.refresh_list()
+
+    def _game_exists(self, title):
+        """Kiểm tra game đã tồn tại trong danh sách (theo tên, không phân biệt hoa thường)"""
+        title = (title or "").strip().lower()
+        for g in self.manager.games:
+            if (g.title or "").strip().lower() == title:
+                return True
+        return False
