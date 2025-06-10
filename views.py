@@ -9,6 +9,8 @@ import os
 import tkinter as tk
 import webbrowser
 import io
+import threading
+import datetime
 
 from models import Game
 
@@ -133,7 +135,6 @@ class MainView:
         style.configure("Modern.TCheckbutton",
                         background="#23262e", foreground="#b0b6c2", font=("Segoe UI", 11),
                         indicatorcolor="#4f8cff", indicatordiameter=16)
-        # Sửa style cho Checkbutton để khi hover sẽ đổi màu nền/viền cho dễ nhìn
         style.map("Modern.TCheckbutton",
                   background=[('active', '#31343c'), ('!active', '#23262e')],
                   foreground=[('active', '#4f8cff'), ('!active', '#b0b6c2')],
@@ -163,13 +164,14 @@ class MainView:
         style.configure("MainTitle.TLabel", background="#23272f", foreground="#e0e6f0", font=("Segoe UI", 16, "bold"))
         style.configure("Section.TLabel", background="#23272f", foreground="#4f8cff", font=("Segoe UI", 13, "bold"))
 
-    def __init__(self, master, manager, user, api_client=None, is_admin=False, on_logout=None):
+    def __init__(self, master, manager, user, api_client=None, is_admin=False, on_logout=None, admin_manage_users_callback=None):
         self.master = master
         self.manager = manager
         self.user = user
         self.api = api_client
         self.is_admin = is_admin
         self.on_logout = on_logout
+        self.admin_manage_users_callback = admin_manage_users_callback
 
         self._setup_style()
         self.genre_filter = ""
@@ -184,6 +186,58 @@ class MainView:
         self.master.resizable(True, True)
         self.master.bind("<Configure>", self._on_resize_main)
 
+        # --- Ảnh nền phủ toàn bộ
+        self.bg_label = None
+        try:
+            from PIL import Image, ImageTk, ImageEnhance, ImageFilter
+            bg_path = os.path.join(os.path.dirname(__file__), "data", "background.jpg")
+            if os.path.exists(bg_path):
+                bg_img = Image.open(bg_path)
+                # Resize ảnh nền về đúng kích thước màn hình 1 lần duy nhất
+                screen_w = master.winfo_screenwidth()
+                screen_h = master.winfo_screenheight()
+                bg_img = bg_img.resize((screen_w, screen_h))
+                # Làm mờ và tối ảnh nền
+                bg_img = bg_img.filter(ImageFilter.GaussianBlur(6))
+                enhancer = ImageEnhance.Brightness(bg_img)
+                bg_img = enhancer.enhance(0.5)
+                self.bg_photo = ImageTk.PhotoImage(bg_img)
+                self.bg_label = tk.Label(master, image=self.bg_photo)
+                self.bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+            else:
+                master.configure(bg="#23272f")
+        except Exception:
+            master.configure(bg="#23272f")
+            self.bg_label = None
+
+        # --- Sidebar trái
+        self.sidebar = tk.Frame(master, bg="#1a1d26", width=210)
+        self.sidebar.place(relx=0, rely=0, relheight=1)
+        # Avatar + tên user
+        try:
+            avatar_path = os.path.join(os.path.dirname(__file__), "data", "avatar.png")
+            avatar_img = Image.open(avatar_path).resize((64, 64))
+            self.avatar_photo = ImageTk.PhotoImage(avatar_img)
+            avatar_label = tk.Label(self.sidebar, image=self.avatar_photo, bg="#1a1d26")
+            avatar_label.pack(pady=(24, 8))
+        except Exception:
+            avatar_label = tk.Label(self.sidebar, text="🙂", font=("Segoe UI", 32), bg="#1a1d26", fg="#fff")
+            avatar_label.pack(pady=(24, 8))
+        tk.Label(self.sidebar, text=user.username, font=("Segoe UI", 14, "bold"), bg="#1a1d26", fg="#fff").pack(pady=(0, 24))
+
+        # Menu sidebar
+        menu_items = [
+            ("Home", lambda: None),
+            ("Catalogue", lambda: None),
+            ("Downloads", lambda: None),
+            ("Settings", lambda: None),
+        ]
+        for text, cmd in menu_items:
+            btn = tk.Button(self.sidebar, text=text, font=("Segoe UI", 12, "bold"),
+                            bg="#23262e", fg="#fff", bd=0, relief="flat", activebackground="#31343c",
+                            activeforeground="#4f8cff", cursor="hand2", command=cmd)
+            btn.pack(fill='x', padx=16, pady=6, ipady=6)
+
         # --- Main frame ---
         self.main_frame = TtkFrame(master, style="MainBG.TFrame")
         self.main_frame.pack(fill='both', expand=True)
@@ -191,11 +245,35 @@ class MainView:
         # --- Tiêu đề chính ---
         TtkLabel(self.main_frame, text="BỘ SƯU TẬP GAME", style="MainTitle.TLabel", anchor="center").pack(pady=(18, 8))
 
+        # --- Hiển thị ngày giờ hiện tại ở góc trên phải ---
+        self.datetime_label = TtkLabel(self.main_frame, text="", style="Card.TLabel", anchor="e")
+        self.datetime_label.pack(anchor="ne", padx=24, pady=(0, 0))
+        self._update_datetime_label()
+
         # --- Thoát/Đăng xuất ---
         top_btn_frame = TtkFrame(self.main_frame, style="MainBG.TFrame")
         top_btn_frame.pack(fill='x', padx=24)
         if self.on_logout:
             self._modern_button(top_btn_frame, 'Đăng xuất', self.on_logout).pack(side=tk.RIGHT, padx=5)
+        # Thêm nút quản lý tài khoản cho admin
+        if self.is_admin and self.admin_manage_users_callback:
+            self._modern_button(top_btn_frame, 'Quản lý tài khoản', self.admin_manage_users_callback).pack(side=tk.RIGHT, padx=5)
+
+        # --- Chọn tài khoản user để thao tác (chỉ admin) ---
+        if self.is_admin:
+            from models import UserManager
+            user_manager = UserManager()
+            # Lấy danh sách user không trùng lặp, không lặp lại user hiện tại
+            self.usernames = [u.username for u in user_manager.users if u.username != "123" and u.username != user.username]
+            self.selected_username = tk.StringVar(value=self.user.username)
+            user_select_frame = TtkFrame(self.main_frame, style="MainBG.TFrame")
+            user_select_frame.pack(fill='x', padx=24, pady=(0, 8))
+            TtkLabel(user_select_frame, text="Chọn tài khoản thao tác:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+            self.user_combobox = Combobox(user_select_frame, textvariable=self.selected_username, state="readonly", width=18, style="Modern.TCombobox")
+            self.user_combobox['values'] = [self.user.username] + self.usernames
+            self.user_combobox.current(0)
+            self.user_combobox.pack(side=tk.LEFT, padx=5)
+            self.user_combobox.bind("<<ComboboxSelected>>", self.on_user_change)
 
         # --- Thanh filter/sort ---
         filter_frame = TtkFrame(self.main_frame, style="MainBG.TFrame")
@@ -238,11 +316,31 @@ class MainView:
         paned.bind('<Configure>', self._on_pane_configure)
 
         # --- Cột trái: danh sách game ---
-        # left_frame = TtkFrame(content_frame, style="MainBG.TFrame")
-        # left_frame.pack(side=tk.LEFT, fill='both', expand=True, padx=(0, 12))
+        # Tiêu đề danh sách game + thanh tìm kiếm
+        title_search_frame = TtkFrame(left_frame, style="MainBG.TFrame")
+        title_search_frame.pack(anchor='w', fill='x', pady=(0, 4), padx=0)
 
-        # Tiêu đề danh sách game
-        TtkLabel(left_frame, text="Danh sách game", style="Section.TLabel", anchor="w").pack(anchor='w', pady=(0, 4))
+        TtkLabel(title_search_frame, text="Danh sách game", style="Section.TLabel", anchor="w").pack(side=tk.LEFT, pady=0, padx=(0, 6))
+
+        # Thêm Entry tìm kiếm và nút search
+        self.search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            title_search_frame, textvariable=self.search_var, font=("Segoe UI", 11),
+            width=18, bg="#23262e", fg="#f5f6fa", insertbackground="#4f8cff",
+            relief="flat", highlightthickness=1, highlightbackground="#31343c", highlightcolor="#4f8cff"
+        )
+        search_entry.pack(side=tk.LEFT, padx=(0, 2), ipady=4)
+        search_entry.bind('<Return>', lambda e: self.on_search())
+        # Thêm dòng này để tự động lọc khi nhập/xóa ký tự
+        search_entry.bind('<KeyRelease>', lambda e: self.refresh_list())
+
+        # Nút search (icon kính lúp)
+        search_btn = tk.Button(
+            title_search_frame, text="🔍", font=("Segoe UI", 11), width=2,
+            bg="#23262e", fg="#4f8cff", bd=0, relief="flat", activebackground="#31343c",
+            activeforeground="#4f8cff", cursor="hand2", command=self.on_search
+        )
+        search_btn.pack(side=tk.LEFT, padx=(0, 0), ipady=0)
 
         # --- Listbox + scrollbar dọc ---
         listbox_frame = TtkFrame(left_frame, style="MainBG.TFrame")
@@ -258,7 +356,6 @@ class MainView:
 
         self.scrollbar_v = Scrollbar(listbox_frame, orient=tk.VERTICAL, command=self.listbox.yview)
         # KHÔNG pack scrollbar_v ở đây, để pack/remove động trong refresh_list
-        self.listbox.config(yscrollcommand=self._on_listbox_scroll)
 
         # --- Nút chức năng ---
         btn_frame = TtkFrame(left_frame, style="MainBG.TFrame")
@@ -324,6 +421,10 @@ class MainView:
     def _modern_button(self, parent, text, command):
         return TtkButton(parent, text=text, command=command, style="Modern.TButton", cursor="hand2")
 
+    def on_search(self):
+        # Khi nhấn Enter hoặc nút search, lọc danh sách game theo tên
+        self.refresh_list()
+
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
         # Lưu thứ tự gốc ban đầu nếu chưa có
@@ -332,6 +433,11 @@ class MainView:
         # Luôn lấy danh sách games đúng thứ tự gốc ban đầu (id tăng dần)
         all_games = sorted(self.manager.games, key=lambda g: self._original_order.index(g.id) if g.id in self._original_order else 1e9)
         games = all_games
+
+        # --- Áp dụng filter tìm kiếm theo tên ---
+        search_text = self.search_var.get().strip().lower()
+        if search_text:
+            games = [g for g in games if search_text in (g.title or '').lower()]
 
         # Apply filters
         if self.genre_filter:
@@ -429,7 +535,7 @@ class MainView:
                 genres=data['genres'],
                 platforms=data['platforms'],
                 site_url=data['site_url'],
-                cover_url=None,  # Không nhập cover_url, aliases
+                cover_url=None,
                 aliases=None
             )
             new_game.id = self.manager.next_id()
@@ -457,26 +563,18 @@ class MainView:
             game.genres = data['genres']
             game.platforms = data['platforms']
             game.site_url = data['site_url']
-            # Không sửa cover_url, aliases
             self.manager.update_game(game)
             self.update_genre_combobox()
             self.refresh_list()
 
     def delete(self):
-        # Cho phép user xóa game nếu là admin hoặc là user và game do user đó thêm (ví dụ: id > 1000 hoặc có trường owner)
         sel = self.listbox.curselection()
         if not sel:
             messagebox.showwarning('Chưa chọn game', 'Vui lòng chọn game để xóa')
             return
         index = sel[0]
         game = self.sorted_games[index] if hasattr(self, 'sorted_games') else self.manager.games[index]
-        # Quyền xóa: admin hoặc user (cho phép xóa tất cả, hoặc chỉ game của user nếu có trường owner)
         if not self.is_admin:
-            # Nếu muốn chỉ cho user xóa game của mình, kiểm tra owner ở đây
-            # if getattr(game, "owner", None) != self.user.username:
-            #     messagebox.showwarning('Không đủ quyền', 'Bạn chỉ có thể xóa game do bạn thêm')
-            #     return
-            # Nếu muốn cho user xóa tất cả, bỏ kiểm tra này
             pass
         if messagebox.askyesno('Xác nhận', f'Bạn có chắc muốn xóa game "{game.title}" không?'):
             self.manager.delete_game(game.id)
@@ -498,7 +596,7 @@ class MainView:
 
         def ask_game_name(parent):
             dialog = Toplevel(parent)
-            dialog.title("Tìm trên API")
+            dialog.title("Tìm game bằng API")
             dialog.configure(bg="#23272f")
             dialog.resizable(False, False)
             center_window(dialog, 600, 180)
@@ -576,8 +674,24 @@ class MainView:
                 content_frame = TtkFrame(top, style="Card.TFrame")
                 content_frame.pack(fill='both', expand=True, padx=10, pady=10)
 
+                lb_scroll = Scrollbar(content_frame)
+                lb_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+                
                 lb = tk.Listbox(content_frame, width=50, selectmode=tk.SINGLE, font=("Segoe UI", 11), bg="#23272f", fg="#e0e6f0", selectbackground="#3a3f4b", highlightthickness=0, bd=0, relief="flat")
                 lb.pack(side=tk.LEFT, fill='both', expand=True, padx=(0, 10), pady=0)
+                
+                lb_scroll.config(command=lb.yview)
+                lb.config(yscrollcommand=lb_scroll.set)
+
+                # --- Thêm hỗ trợ cuộn chuột ---
+                def on_mousewheel(event):
+                    if lb.winfo_height() < lb.size() * 24:
+                        lb.yview_scroll(int(-1 * (event.delta / 120)), "units")
+                        return "break"
+                lb.bind("<MouseWheel>", on_mousewheel)
+                # Đảm bảo cuộn được cả khi chuột ở trên scrollbar
+                lb_scroll.bind("<MouseWheel>", on_mousewheel)
+
                 for idx, r in enumerate(results):
                     lb.insert(tk.END, f"{r.get('name')} - {r.get('original_release_date') or 'Không rõ'}")
 
@@ -730,7 +844,13 @@ class MainView:
         txt.config(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
-        with open(self.manager.path, 'r', encoding='utf-8') as f:
+        # Sửa đoạn này: tạo file nếu chưa tồn tại
+        path = self.manager.path
+        if not os.path.exists(path):
+            messagebox.showinfo("Thông báo", f"Chưa có dữ liệu cho tài khoản này.\nFile {path} chưa tồn tại.")
+            top.destroy()
+            return
+        with open(path, 'r', encoding='utf-8') as f:
             data = f.read()
         txt.insert('1.0', data)
 
@@ -769,22 +889,24 @@ class MainView:
             # Hiện ảnh bìa nếu có
             url = game.cover_url
             if url:
-                try:
-                    with urllib.request.urlopen(url) as u:
-                        raw_data = u.read()
-                    im = Image.open(io.BytesIO(raw_data))
-                    # Sửa: tăng kích thước ảnh bìa lên (ví dụ 200x270)
-                    im = im.resize((200, 270))
-                    photo = ImageTk.PhotoImage(im)
-                    self.cover_label.config(image=photo, text='')
-                    self.cover_label.image = photo
-                except Exception as e:
-                    self.cover_label.config(image='', text='Không tải được ảnh')
-                    self.cover_label.image = None
+                # Tải ảnh bìa bằng threading để không block UI
+                def load_cover():
+                    try:
+                        with urllib.request.urlopen(url) as u:
+                            raw_data = u.read()
+                        im = Image.open(io.BytesIO(raw_data))
+                        im = im.resize((200, 270))
+                        photo = ImageTk.PhotoImage(im)
+                        self.cover_label.config(image=photo, text='')
+                        self.cover_label.image = photo
+                    except Exception as e:
+                        self.cover_label.config(image='', text='Không tải được ảnh')
+                        self.cover_label.image = None
+                threading.Thread(target=load_cover, daemon=True).start()
             else:
                 self.cover_label.config(image='', text='Không có ảnh')
                 self.cover_label.image = None
-            # Hiện thông tin game (không hiện url bìa)
+            # Hiện thông tin game (có thêm ngày giờ tạo nếu có)
             info = f"""
 Tên: {safe_text(game.title)}
 Mô tả: {safe_text(game.description)}
@@ -806,6 +928,11 @@ Liên kết chi tiết: {safe_text(game.site_url)}
             self.info_scrollbar_h.grid_remove()
             self.info_scrollbar_v.grid_remove()
             self._update_info_scrollbar_visibility()
+
+    def _update_datetime_label(self):
+        now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        self.datetime_label.config(text=f"🕒 {now}")
+        self.datetime_label.after(1000, self._update_datetime_label)
 
     def _update_info_scrollbar_visibility(self):
         # Kiểm tra nếu nội dung info_text đủ dài để cuộn thì hiện, ngược lại ẩn
@@ -884,6 +1011,13 @@ Liên kết chi tiết: {safe_text(game.site_url)}
     def _handle_info_mousewheel_unbind(self):
         self.info_text.unbind("<MouseWheel>")
 
+    # --- THÊM HÀM NÀY để tránh lỗi AttributeError ---
+    def _on_info_mousewheel(self, event):
+        # Cho phép cuộn nội dung info_text bằng chuột
+        if event.delta:
+            self.info_text.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
+
     def _set_default_pane_size(self):
         paned = self._paned
         total = paned.winfo_width()
@@ -906,3 +1040,11 @@ Liên kết chi tiết: {safe_text(game.site_url)}
         if not self._pane_initialized:
             self._set_default_pane_size()
         # ...nếu đã set rồi thì không làm gì, tránh nhảy sash khi resize bình thường...
+
+    def on_user_change(self, event=None):
+        # Khi admin chọn user khác, load lại manager cho user đó
+        username = self.selected_username.get()
+        from models import GameManager
+        self.manager = GameManager(username=username)
+        self._original_order = None  # Reset lại thứ tự gốc
+        self.refresh_list()

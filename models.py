@@ -1,9 +1,10 @@
 import json
 import os
+import datetime
 
 # --- game.py ---
 class Game:
-    def __init__(self, title, description, released=None, cover_url=None, developers=None, genres=None, platforms=None, site_url=None, aliases=None, id=None):
+    def __init__(self, title, description, released=None, cover_url=None, developers=None, genres=None, platforms=None, site_url=None, aliases=None, id=None, created_at=None):
         self.id = id
         self.title = title
         self.description = description
@@ -14,6 +15,7 @@ class Game:
         self.platforms = platforms
         self.site_url = site_url
         self.aliases = aliases
+        self.created_at = created_at
 
     def to_dict(self):
         return {
@@ -124,7 +126,9 @@ class GameManager:
         """Thêm game mới"""
         if not isinstance(game, Game):
             raise ValueError("Tham số phải là instance của Game")
-        
+        # Thêm trường created_at nếu chưa có
+        if not hasattr(game, "created_at") or not getattr(game, "created_at", None):
+            game.created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Kiểm tra trùng lặp ID
         if any(g.id == game.id for g in self.games):
             raise ValueError(f"Game với ID {game.id} đã tồn tại")
@@ -362,6 +366,16 @@ class UserManager:
         """Thêm người dùng mới vào hệ thống"""
         self.users.append(user)
         self._save()
+
+    def update_user(self, username, **kwargs):
+        for u in self.users:
+            if u.username == username and u.username != "123":
+                for k, v in kwargs.items():
+                    if hasattr(u, k):
+                        setattr(u, k, v)
+                self._save()
+                return True
+        return False
 
     def user_exists(self, username):
         return any(u.username == username for u in self.users)
